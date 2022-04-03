@@ -1,0 +1,11 @@
+npx hardhat run --network rinkeby scripts/deploy.js
+
+
+npx hardhat verify --contract contracts/BEACON/ERC1155RaribleBeacon.sol:ERC1155RaribleBeacon --network rinkeby 0x177283e35007Efb7a0F069E506882d3d2491df85 --constructor-args arguments.js 
+
+
+npx hardhat verify --network rinkeby 0xaf1c97d471ff0711afa64afe93f99d63685e699e --constructor-args arguments.js 
+
+
+**** beacon proxy ****
+npx hardhat verify --contract contracts/TestAssetFactory/BeaconProxy.sol:BeaconProxy --network rinkeby 0x798614ebdcd31b8d86e1e7e217e58fb19e278815 --constructor-args arguments.js 
