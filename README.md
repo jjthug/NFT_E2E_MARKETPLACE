@@ -1,15 +1,20 @@
-# Basic Sample Hardhat Project
+# NFT MARKETPLACE
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, a sample script that deploys that contract, and an example of a task implementation, which simply lists the available accounts.
+This project contains the smart contract to deploying an end-to-end NFT Marketplace based on Rarible protocol.
 
-Try running some of the following tasks:
+All the contracts required for deployment are in the **contracts store** folder
+When deploying a set of contracts copy from this folder to the contracts folder in order to deploy through hardhat.
 
-```shell
-npx hardhat accounts
-npx hardhat compile
-npx hardhat clean
-npx hardhat test
-npx hardhat node
-node scripts/sample-script.js
-npx hardhat help
-```
+## Order of deployment
+
+1. ERC20 Transfer Proxy
+2. NFT Transfer Proxy
+3. Lazy Transfer Proxy
+4. ERC1155 Asset
+5. Beacon
+6. ERC1155 Asset Factory
+
+These set of contracts will setup the NFT Factory contracts, which can be used to create collections and lazy mint (offchain listing) tokens in these collections.
+
+7. External Royalties deployed as an upgradeable contract
+8. Exchange deployed as an upgradeable contract
