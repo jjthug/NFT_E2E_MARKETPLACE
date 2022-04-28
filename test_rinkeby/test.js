@@ -2,9 +2,15 @@ const { expect, assert } = require("chai");
 const { ethers } = require("hardhat");
 const truffleAssert = require('truffle-assertions');
 
-const chainId = 31337;
-
+const chainId = 4;
+const TOKENID = 49;
+const TIME_OFFSET = 20;
+const TIMEOUT = 10000;
 log = (arg) => console.log(arg);
+
+function timeout(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 const getTokenId = (userAddress, number) =>{
   return ethers.utils.solidityPack([ "address", "uint96" ], [userAddress, number]); 
@@ -202,6 +208,28 @@ const getProducerSignatureForTokenUri = async(producer, _verifyingContractAddres
   
 }
 
+const getOrderFillHash = (_erc20AssetData, _nftAssetData, _maker, _salt, _orderData) =>{
+
+  const assetTypeHash = "0x452a0dc408cb0d27ffc3b3caff933a5208040a53a9dbecd8d89cad2c0d40e00c";
+
+  // USDC hash
+  const erc20AssetClass = "0x8ae85d84";
+  // let erc20AssetData = "0x0000000000000000000000001b4581b71a642c551830e6b5b1f319aa6427009e";
+  let usdcHash = utils.keccak256(utils.defaultAbiCoder.encode(["bytes32", "bytes4", "bytes32" ], 
+    [assetTypeHash, erc20AssetClass, utils.keccak256(_erc20AssetData) ]));
+
+  // NFT asset hash
+  const erc1155LazyAssetClass = "0x1cdfaa40";
+  // let nftAssetData = "0x00000000000000000000000065fd28bb09215e6219c82f4e4d9faf2ca60244260000000000000000000000000000000000000000000000000000000000000040c0a0aea4f8457caa8c47ed5b5da410e40efcbf3c000000000000000000000019000000000000000000000000000000000000000000000000000000000000012000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000180000000000000000000000000c0a0aea4f8457caa8c47ed5b5da410e40efcbf3c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001c0000000000000000000000000000000000000000000000000000000000000022000000000000000000000000000000000000000000000000000000000000002800000000000000000000000000000000000000000000000000000000000000035697066733a2f2f516d65376974635964735a6b78355145535277777779644b7377766f58635635336f463948686364676955696a660000000000000000000000000000000000000000000000000000000000000000000000000000000000001836316262333431646663643436393030313137333333663500000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000c0a0aea4f8457caa8c47ed5b5da410e40efcbf3c00000000000000000000000000000000000000000000000000000000000027100000000000000000000000000000000000000000000000000000000000000001000000000000000000000000c0a0aea4f8457caa8c47ed5b5da410e40efcbf3c00000000000000000000000000000000000000000000000000000000000000640000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000412307895217429b450458cea7628b5e5bf55919fd5c1f987b34038be1f43e758d1c0af9248f32c12e48d4df8b9fdeaaf75a1900fc359d2e2b157a232876ba49711b00000000000000000000000000000000000000000000000000000000000000";
+  let nftHash = utils.keccak256(utils.defaultAbiCoder.encode(["bytes32", "bytes4", "bytes32" ], 
+    [assetTypeHash, erc1155LazyAssetClass, utils.keccak256(_nftAssetData) ]));
+
+  // let maker ="0xc0a0aea4f8457caa8c47ed5b5da410e40efcbf3c";
+  // let salt = "1650529658287";
+  // let thedataaa = "0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000023f7f82eb917a49a722e970580ee138af5f71d7400000000000000000000000000000000000000000000000000000000000000fa";
+  let val = utils.keccak256(utils.defaultAbiCoder.encode(["address","bytes32", "bytes32", "uint256", "bytes"], [_maker, nftHash, usdcHash, _salt, _orderData]));
+}
+
 describe("Marketplace", function () {
   
     let asset, beacon, lazyTransferProxy, nftTransferProxy, factory, collectionProxy, erc20TransferProxy, royaltiesRegistry, exchange, token;
@@ -231,7 +259,10 @@ describe("Marketplace", function () {
     let buyOrderData;
 
     let producerSignature;
+    let tx;
+    let receipt;
     let SALT;
+    let failCounter = 0;
 
   before(async function () {
 
@@ -245,86 +276,56 @@ describe("Marketplace", function () {
     log(originFeeReceiver.address);
 
     let CD = await ethers.getContractFactory("contracts/ERC1155_ASSET/ERC1155Moviecoin.sol:ERC1155Moviecoin");
-    asset = await CD.deploy();
-    await asset.deployed();
+    asset = await CD.attach("0xd58401A0751901c0cA7CE32262FC3DE72507BE1A");
     console.log("asset Deployed to : ", asset.address);
 
     CD = await ethers.getContractFactory("contracts/BEACON/ERC1155MVCBeacon.sol:ERC1155MoviecoinBeacon");
-    beacon = await CD.deploy(asset.address);
-    await beacon.deployed();
+    beacon = await CD.attach("0x4DfFdb3afDA716e9EA775D16C16B46d07976c40c");
     console.log("beacon Deployed to : ", beacon.address);
 
     CD = await ethers.getContractFactory("contracts/LazyTransferProxy/ERC1155LazyMintTransferProxy.sol:ERC1155LazyMintTransferProxy");
-    lazyTransferProxy = await CD.deploy();
-    await lazyTransferProxy.deployed();
+    lazyTransferProxy = await CD.attach("0x84d2Ea192E7d6693AE636ee26B803c024c494Aee");
     console.log("lazyTransferProxy Deployed to : ", lazyTransferProxy.address);
 
     CD = await ethers.getContractFactory("contracts/NFTTransferProxy/TransferProxy.sol:NftTransferProxy");   
-    nftTransferProxy = await CD.deploy();
-    await nftTransferProxy.deployed();
+    nftTransferProxy = await CD.attach("0x22c90de2669278887acCc0A9a76Fa11F95cc28f7");
     console.log("nftTransferProxy Deployed to : ", nftTransferProxy.address);
 
     CD = await ethers.getContractFactory("contracts/ERC1155AssetFactory/ERC1155MoviecoinFactoryC2.sol:ERC1155MoviecoinFactoryC2");
-    factory = await CD.deploy(beacon.address, nftTransferProxy.address, lazyTransferProxy.address);
-    await factory.deployed();
+    factory = await CD.attach("0xE8ea4B22780A605Da8B4A53918F93A61DCBBb027");
     console.log("factory Deployed to : ", factory.address);
-    let tx = await factory['createToken(string,string,string,string,address[],uint256)'](movieCollectionName, "MVC", "", "", [], 123456);
-    let res = await tx.wait();
-    for (const event of res.events) {
-        if(event.event =="Create1155MoviecoinUserProxy") {
-            collectionProxyAddress = event.args[0];
-            console.log("Collection proxy deployed to = ", collectionProxyAddress);
-            break;
-        }
-    }
+    collectionProxyAddress = "0x2b5582F246322069bC7F2C83935eFcec5a8965Db";
+    console.log("Collection proxy deployed to = ", collectionProxyAddress);
+
 
     CD = await ethers.getContractFactory("contracts/ERC1155_ASSET/ERC1155Moviecoin.sol:ERC1155Moviecoin");
     collectionProxy = await CD.attach(collectionProxyAddress);
 
     CD = await ethers.getContractFactory("contracts/ERC20TransferProxy/ERC20TransferProxy.sol:ERC20TransferProxy");
-    erc20TransferProxy = await CD.deploy();
-    await erc20TransferProxy.deployed();
+    erc20TransferProxy = await CD.attach("0x3b5ee6a275f5bcA611cb0354192217b60b970988");
     console.log("erc20TransferProxy Deployed to : ", erc20TransferProxy.address);
 
     CD = await ethers.getContractFactory("contracts/RoyaltiesRegistry/RoyaltiesRegistry.sol:RoyaltiesRegistry");
-    royaltiesRegistry = await upgrades.deployProxy(CD, [], {initializer:"__RoyaltiesRegistry_init"});
-    await royaltiesRegistry.deployed();
+    royaltiesRegistry = await CD.attach("0xfAd7899649532795Ba7c6b2238713edB0E42c5d7");
     console.log("royaltiesRegistry Deployed to : ", royaltiesRegistry.address);
 
     CD = await ethers.getContractFactory("contracts/Exchange/ExchangeV2.sol:ExchangeV2");
-    exchange = await upgrades.deployProxy(CD, [nftTransferProxy.address,lazyTransferProxy.address,erc20TransferProxy.address,0,"0x23F7F82Eb917A49a722E970580Ee138Af5f71D74",royaltiesRegistry.address], {initializer:"__ExchangeV2_init"});
-    await exchange.deployed();
+    exchange = await CD.attach("0x275F39709d5aD194eeDD68047dE1b6E529d08C92");
     console.log("exchange Deployed to : ", exchange.address);
 
     CD = await ethers.getContractFactory("contracts/TEST_ERC20/Token.sol:Token");
-    token = await CD.deploy("US Dollar Coin", "USDC", "10000000000000000000000000");
-    await token.deployed();
+    token = await CD.attach("0x7FACBe3571a528528b5cf4F447896c1764b18E1d");
     console.log("token Deployed to : ", token.address);
-    await token.transfer(addr1.address, "100000000000000000000000");
-
-    /* Adding exchange operator to lazy transfer proxy and erc20 proxy */
-    await lazyTransferProxy.__OperatorRole_init();
-
-    await lazyTransferProxy.addOperator(exchange.address);
-
-    await erc20TransferProxy.__OperatorRole_init();
-
-    await erc20TransferProxy.addOperator(exchange.address);
-
-    await token.connect(addr1).approve(erc20TransferProxy.address, "10000000000000000000000");
-
-    /* Owner address */
-    // let theowner = await beacon.owner();
-    // console.log("theowner",theowner);
-    // console.log("owner",owner.address);
+    log("done1");
   });
 
   it("direct BUY-SELL", async()=>{
 
     /*************************************************** NFT Asset Data *********************************************************/
 
-    [ tokenId, tokenUri, supply, movieId, producer, NftRevealTime ] = [getTokenId(owner.address, 1), "ipfs://QmUjeTXzENaLu1UfyMpgdtuxCENvE2TXk9YxXHiLeJZqyw", 344, "abcd1234", producerUser.address, "167564623"];
+    [ tokenId, tokenUri, supply, movieId, producer, NftRevealTime ] = [getTokenId(owner.address, TOKENID), "ipfs://QmUjeTXzENaLu1UfyMpgdtuxCENvE2TXk9YxXHiLeJZqyw", 344, "abcd1234", producerUser.address, "167564623"];
     creatorsObjArray = [{account : owner.address, value: 10000}];
+    console.log("tokenid=",getTokenId(owner.address, TOKENID));
     royaltiesObjArray = [{account : owner.address, value: 700}];
     creators = [owner.address, 10000];
     royalties = [owner.address, 700];
@@ -334,12 +335,12 @@ describe("Marketplace", function () {
 
     /************************************************ SELL Order & Signature *****************************************************/
     
-    [ SELL_MAKER, SELL_MAKEASSET_ASSETCLASS, SELL_MAKEASSET_DATA, SELL_MAKEASSET_VALUE ] = [owner.address, "0x1cdfaa40", NFT_ASSET_DATA, 10 ];
+    [ SELL_MAKER, SELL_MAKEASSET_ASSETCLASS, SELL_MAKEASSET_DATA, SELL_MAKEASSET_VALUE ] = [owner.address, "0x1cdfaa40", NFT_ASSET_DATA, 2 ];
 
-    [ SELL_TAKER, SELL_TAKEASSET_ASSETCLASS, SELL_TAKEASSET_DATA, SELL_TAKEASSET_VALUE ] = ["0x0000000000000000000000000000000000000000", "0x8ae85d84", getERC20AssetData( token.address ), "1000000000000000000"];
+    [ SELL_TAKER, SELL_TAKEASSET_ASSETCLASS, SELL_TAKEASSET_DATA, SELL_TAKEASSET_VALUE ] = ["0x0000000000000000000000000000000000000000", "0x8ae85d84", getERC20AssetData( token.address ), "200000000000000000"];
 
     [SELL_salt, SELL_start, SELL_end] = [SALT, 0, 0];
-        
+      console.log("SALT is", SALT);
     /*Origin fees to address */
     sellOrderData = getOrderData(originFeeReceiver.address, 250, isMakeFillSellOrder);
 
@@ -358,9 +359,9 @@ describe("Marketplace", function () {
 
     [ BUY_TAKER, BUY_TAKEASSET_ASSETCLASS, BUY_TAKEASSET_DATA, BUY_TAKEASSET_VALUE] = ["0x0000000000000000000000000000000000000000", "0x1cdfaa40", NFT_ASSET_DATA, 1];
 
-    [BUY_salt, BUY_start, BUY_end ]  = [0, 0, 0]; 
+    [BUY_salt, BUY_start, BUY_end ]  = [0, 0, 0];
     
-    /*Origin fees to address */
+    /* Origin fees to address */
     buyOrderData = getOrderData(originFeeReceiver.address, 250, isMakeFillBuyOrder);
 
     buyOrder = [BUY_MAKER, [[BUY_MAKEASSET_ASSETCLASS, BUY_MAKEASSET_DATA], BUY_MAKEASSET_VALUE ],
@@ -377,28 +378,44 @@ describe("Marketplace", function () {
   /************************************************ Match Order *****************************************************/
 
   // only buyer can match the order without the original buyer's signature
-  await truffleAssert.reverts( 
-    exchange.connect(hacker).matchOrders(buyOrder, "0x", sellOrder, sellSignature),
-    "VM Exception while processing transaction: reverted with reason string 'maker is not tx sender'"
-    );
-  
-  for(let i=0; i<10;i++)
-    await exchange.connect(addr1).matchOrders(buyOrder, "0x", sellOrder, sellSignature);
+  try{
+    tx = await exchange.connect(hacker).matchOrders(buyOrder, "0x", sellOrder, sellSignature);
+    await tx.wait();
+  }catch(e){
+    failCounter++;
+  }
 
+  // try{
+  // tx = await exchange.connect(hacker).matchOrders(buyOrder, "0x", sellOrder, sellSignature);
+  // receipt = tx.wait();
+  // if(!receipt.status){
+  //   console.log("reverted, found in receipt");
+  // }
+  // } catch(e){}
+  
 
   
+  for(let i=0; i<2;i++){
+    tx = await exchange.connect(addr1).matchOrders(buyOrder, "0x", sellOrder, sellSignature);
+    console.log("tx hash=",tx.hash);
+    receipt = await tx.wait(1);
+    console.log("1. receipt hash =",receipt.transactionHash, ", status = ",receipt.status);
+  }
 })
 
 it("already filled orders cant be filled", async()=>{
 
-  await truffleAssert.reverts( 
-    exchange.connect(addr1).matchOrders(buyOrder, "0x", sellOrder, sellSignature),
-    "VM Exception while processing transaction: reverted with reason string 'nothing to fill'"
-    );
+  try{ 
+    tx= await exchange.connect(addr1).matchOrders(buyOrder, "0x", sellOrder, sellSignature);
+    receipt = await tx.wait(1);
+    console.log("2. receipt hash =",receipt.transactionHash, ", status = ",receipt.status);
+    }catch(e){
+      failCounter++;
+    }
 })
 
 it("cancelled orders cant be executed", async()=>{
-  SELL_salt = SALT + 1;
+  SELL_salt = SALT + 5;
   sellOrder = [SELL_MAKER, [[SELL_MAKEASSET_ASSETCLASS,SELL_MAKEASSET_DATA], SELL_MAKEASSET_VALUE ],
     SELL_TAKER, [[SELL_TAKEASSET_ASSETCLASS,SELL_TAKEASSET_DATA], SELL_TAKEASSET_VALUE ], SELL_salt, SELL_start, SELL_end, dataType, sellOrderData ];
 
@@ -413,14 +430,16 @@ it("cancelled orders cant be executed", async()=>{
 
   await exchange.connect(addr1).matchOrders(buyOrder, "0x", sellOrder, sellSignature);
 
-  await exchange.connect(owner).cancel(sellOrder);
+  tx = await exchange.connect(owner).cancel(sellOrder);
+  receipt = await tx.wait();
+  console.log("_3. receipt hash =",receipt.transactionHash, ", status = ",receipt.status);
 
-  // await exchange.connect(addr1).matchOrders(buyOrder, "0x", sellOrder, sellSignature);
 
-  await truffleAssert.reverts(
-    exchange.connect(addr1).matchOrders(buyOrder, "0x", sellOrder, sellSignature),
-    "VM Exception while processing transaction: reverted with reason string 'SafeMath: subtraction overflow'"
-  );
+  try{
+    await exchange.connect(addr1).matchOrders(buyOrder, "0x", sellOrder, sellSignature);
+  } catch(e){
+    failCounter++;
+  }
 
 })
 
@@ -429,7 +448,7 @@ it("accept bids", async()=>{
   sellOrder = [SELL_MAKER, [[SELL_MAKEASSET_ASSETCLASS,SELL_MAKEASSET_DATA], SELL_MAKEASSET_VALUE ],
     SELL_TAKER, [[SELL_TAKEASSET_ASSETCLASS,SELL_TAKEASSET_DATA], SELL_TAKEASSET_VALUE ], SELL_salt, SELL_start, SELL_end, dataType, sellOrderData ];
 
-  BUY_salt = SALT+2;
+  BUY_salt = SALT;
   buyOrder = [BUY_MAKER, [[BUY_MAKEASSET_ASSETCLASS, BUY_MAKEASSET_DATA], BUY_MAKEASSET_VALUE ],
     BUY_TAKER, [[BUY_TAKEASSET_ASSETCLASS, BUY_TAKEASSET_DATA], BUY_TAKEASSET_VALUE ], BUY_salt, BUY_start, BUY_end, dataType, buyOrderData ];
   
@@ -439,15 +458,20 @@ it("accept bids", async()=>{
     BUY_salt, BUY_start, BUY_end, dataType, buyOrderData
   );
 
-  await truffleAssert.reverts( 
-    exchange.connect(hacker).matchOrders(sellOrder, "0x", buyOrder, buySignature),
-    "VM Exception while processing transaction: reverted with reason string 'maker is not tx sender'"
-  );
+  try{ 
+    tx = await exchange.connect(hacker).matchOrders(sellOrder, "0x", buyOrder, buySignature);
+    receipt = await tx.wait(1);
+    console.log("3. receipt hash =",receipt.transactionHash, ", status = ",receipt.status);
+  }catch(e){
+    failCounter++;
+  }
 
-  await exchange.connect(owner).matchOrders(sellOrder, "0x", buyOrder, buySignature);
+  tx = await exchange.connect(owner).matchOrders(sellOrder, "0x", buyOrder, buySignature);
+  receipt = await tx.wait(1);
+  console.log("3. receipt hash =",receipt.transactionHash, ", status = ",receipt.status);
 
   /* other addresses can accept the bid if they have the seller signature */
-  SELL_salt = SALT+3;
+  SELL_salt = SALT+1;
   sellOrder = [SELL_MAKER, [[SELL_MAKEASSET_ASSETCLASS,SELL_MAKEASSET_DATA], SELL_MAKEASSET_VALUE ],
     SELL_TAKER, [[SELL_TAKEASSET_ASSETCLASS,SELL_TAKEASSET_DATA], SELL_TAKEASSET_VALUE ], SELL_salt, SELL_start, SELL_end, dataType, sellOrderData ];
   sellSignature = await signOrder(owner, exchange.address,
@@ -456,7 +480,7 @@ it("accept bids", async()=>{
     SELL_salt, SELL_start, SELL_end, dataType, sellOrderData
   );
 
-  BUY_salt = SALT+3;
+  BUY_salt = SALT+1;
   buyOrder = [BUY_MAKER, [[BUY_MAKEASSET_ASSETCLASS, BUY_MAKEASSET_DATA], BUY_MAKEASSET_VALUE ],
     BUY_TAKER, [[BUY_TAKEASSET_ASSETCLASS, BUY_TAKEASSET_DATA], BUY_TAKEASSET_VALUE ], BUY_salt, BUY_start, BUY_end, dataType, buyOrderData ];
     
@@ -466,19 +490,20 @@ it("accept bids", async()=>{
     BUY_salt, BUY_start, BUY_end, dataType, buyOrderData
   );
   // any user can accept bid for addr1 if they have signature
-  await exchange.connect(hacker).matchOrders(sellOrder, sellSignature, buyOrder, buySignature);
-
+  tx = await exchange.connect(hacker).matchOrders(sellOrder, sellSignature, buyOrder, buySignature);
+  
+  // TODO check why
+    //   receipt = await tx.wait();
+    //   console.log("3. receipt hash =",receipt.transactionHash, ", status = ",receipt.status);
 })
 
 it("accept timed bids", async()=>{
-
-  const sevenDays = 7 * 24 * 60 * 60;
 
   const blockNumBefore = await ethers.provider.getBlockNumber();
   const blockBefore = await ethers.provider.getBlock(blockNumBefore);
   const timestampBefore = blockBefore.timestamp;
 
-  [BUY_salt, BUY_start, BUY_end ]  = [SALT+4, timestampBefore, timestampBefore+sevenDays];
+  [BUY_salt, BUY_start, BUY_end ]  = [SALT+8, timestampBefore, timestampBefore+TIME_OFFSET];
   buyOrder = [BUY_MAKER, [[BUY_MAKEASSET_ASSETCLASS, BUY_MAKEASSET_DATA], BUY_MAKEASSET_VALUE ],
     BUY_TAKER, [[BUY_TAKEASSET_ASSETCLASS, BUY_TAKEASSET_DATA], BUY_TAKEASSET_VALUE ], BUY_salt, BUY_start, BUY_end, dataType, buyOrderData ];
 
@@ -505,7 +530,9 @@ it("accept timed bids", async()=>{
 
 
   /* Accepting bids after the bid end time (should fail) */
-  BUY_salt = SALT+5;
+  await timeout(TIMEOUT);
+
+  BUY_salt = SALT+9;
   buyOrder = [BUY_MAKER, [[BUY_MAKEASSET_ASSETCLASS, BUY_MAKEASSET_DATA], BUY_MAKEASSET_VALUE ],
     BUY_TAKER, [[BUY_TAKEASSET_ASSETCLASS, BUY_TAKEASSET_DATA], BUY_TAKEASSET_VALUE ], BUY_salt, BUY_start, BUY_end, dataType, buyOrderData ];
 
@@ -516,22 +543,17 @@ it("accept timed bids", async()=>{
       BUY_salt, BUY_start, BUY_end, dataType, buyOrderData
   );
 
-  await ethers.provider.send('evm_mine',[timestampBefore+sevenDays]);
-
-  const blockNumAfter = await ethers.provider.getBlockNumber();
-  const blockAfter = await ethers.provider.getBlock(blockNumAfter);
-  const timestampAfter = blockAfter.timestamp;
-
-  await truffleAssert.reverts(
-   exchange.connect(owner).matchOrders( buyOrder, buySignature, sellOrder, sellSignature ),
-   "VM Exception while processing transaction: reverted with reason string 'Order end validation failed'"
-   );
+  try{
+   await exchange.connect(owner).matchOrders( buyOrder, buySignature, sellOrder, sellSignature );
+   }catch(e){
+   failCounter++;
+   }
 
 })
 
 it("incorrect exchange rate", async()=>{
   [BUY_start, BUY_end ] = [0,0]
-  SELL_salt = SALT+6;
+  SELL_salt = SALT+2;
   sellOrder = [SELL_MAKER, [[SELL_MAKEASSET_ASSETCLASS,SELL_MAKEASSET_DATA], SELL_MAKEASSET_VALUE ],
     SELL_TAKER, [[SELL_TAKEASSET_ASSETCLASS,SELL_TAKEASSET_DATA], SELL_TAKEASSET_VALUE ], SELL_salt, SELL_start, SELL_end, dataType, sellOrderData ];
 
@@ -543,33 +565,39 @@ it("incorrect exchange rate", async()=>{
 
 
   BUY_MAKEASSET_VALUE = "10000000000000000"; // lesser amount that required
-  BUY_salt = SALT+6;
+  BUY_salt = SALT+2;
   buyOrder = [BUY_MAKER, [[BUY_MAKEASSET_ASSETCLASS, BUY_MAKEASSET_DATA], BUY_MAKEASSET_VALUE ],
     BUY_TAKER, [[BUY_TAKEASSET_ASSETCLASS, BUY_TAKEASSET_DATA], BUY_TAKEASSET_VALUE ], BUY_salt, BUY_start, BUY_end, dataType, buyOrderData ];
   
-  await truffleAssert.reverts( 
-    exchange.connect(addr1).matchOrders(buyOrder, "0x", sellOrder, sellSignature),
-    "VM Exception while processing transaction: reverted with reason string 'fillLeft: unable to fill'"
-    );
+  try{ 
+    tx = await exchange.connect(addr1).matchOrders(buyOrder, "0x", sellOrder, sellSignature);
+    receipt = await tx.wait(1);
+    console.log("4. receipt hash =",receipt.transactionHash, ", status = ",receipt.status);
+  }catch(e){
+    failCounter++;
+  }
 })
 
 it("incorrect sell signature", async()=>{
-  sellSignature = await signOrder(hacker, exchange.address,
+  sellSignature = await signOrder(originFeeReceiver, exchange.address,
     SELL_MAKER, SELL_MAKEASSET_ASSETCLASS, SELL_MAKEASSET_DATA, SELL_MAKEASSET_VALUE,
     SELL_TAKER, SELL_TAKEASSET_ASSETCLASS, SELL_TAKEASSET_DATA, SELL_TAKEASSET_VALUE,
     SELL_salt, SELL_start, SELL_end, dataType, sellOrderData
   );
 
-  await truffleAssert.reverts( 
-    exchange.connect(addr1).matchOrders(buyOrder, "0x", sellOrder, sellSignature),
-    "VM Exception while processing transaction: reverted with reason string 'order signature verification error'"
-    );
+  try{ 
+    tx = await exchange.connect(addr1).matchOrders(buyOrder, "0x", sellOrder, sellSignature);
+    receipt = await tx.wait(1);
+    console.log("5. receipt hash =",receipt.transactionHash, ", status = ",receipt.status);
+  }catch(e){
+    failCounter++;
+  }
 })
 
 it("not approved sufficient erc20 balance", async()=>{
-  BUY_salt = SALT+7;
+  BUY_salt = SALT+3;
   BUY_MAKEASSET_VALUE = "100000000000000000000000";
-  SELL_salt = SALT+7;
+  SELL_salt = SALT+3;
   SELL_TAKEASSET_VALUE = "100000000000000000000000";
 
   sellOrder = [SELL_MAKER, [[SELL_MAKEASSET_ASSETCLASS,SELL_MAKEASSET_DATA], SELL_MAKEASSET_VALUE ],
@@ -584,18 +612,18 @@ it("not approved sufficient erc20 balance", async()=>{
     buyOrder = [BUY_MAKER, [[BUY_MAKEASSET_ASSETCLASS, BUY_MAKEASSET_DATA], BUY_MAKEASSET_VALUE ],
     BUY_TAKER, [[BUY_TAKEASSET_ASSETCLASS, BUY_TAKEASSET_DATA], BUY_TAKEASSET_VALUE ], BUY_salt, BUY_start, BUY_end, dataType, buyOrderData ];
 
-    await truffleAssert.reverts( 
-      exchange.connect(addr1).matchOrders(buyOrder, "0x", sellOrder, sellSignature),
-      "VM Exception while processing transaction: reverted with reason string 'ERC20: transfer amount exceeds allowance'"
-    );
-
+    try{ 
+      await exchange.connect(addr1).matchOrders(buyOrder, "0x", sellOrder, sellSignature);
+    }catch(e){
+      failCounter++;
+    }
 })
 
 it("ETH as fees", async()=>{
-  BUY_salt = SALT+8;
-  [BUY_MAKEASSET_ASSETCLASS, BUY_MAKEASSET_DATA, BUY_MAKEASSET_VALUE] = ["0xaaaebeba","0x", "100"];
-  SELL_salt = SALT+8;
-  [SELL_TAKEASSET_ASSETCLASS, SELL_TAKEASSET_DATA, SELL_TAKEASSET_VALUE] = ["0xaaaebeba","0x", "100"];
+  BUY_salt = SALT+4;
+  [BUY_MAKEASSET_ASSETCLASS, BUY_MAKEASSET_DATA, BUY_MAKEASSET_VALUE] = ["0xaaaebeba","0x", "1000"];
+  SELL_salt = SALT+4;
+  [SELL_TAKEASSET_ASSETCLASS, SELL_TAKEASSET_DATA, SELL_TAKEASSET_VALUE] = ["0xaaaebeba","0x", "1000"];
 
   sellOrder = [SELL_MAKER, [[SELL_MAKEASSET_ASSETCLASS,SELL_MAKEASSET_DATA], SELL_MAKEASSET_VALUE ],
     SELL_TAKER, [[SELL_TAKEASSET_ASSETCLASS,SELL_TAKEASSET_DATA], SELL_TAKEASSET_VALUE ], SELL_salt, SELL_start, SELL_end, dataType, sellOrderData ];
@@ -610,19 +638,24 @@ it("ETH as fees", async()=>{
   buyOrder = [BUY_MAKER, [[BUY_MAKEASSET_ASSETCLASS, BUY_MAKEASSET_DATA], BUY_MAKEASSET_VALUE ],
   BUY_TAKER, [[BUY_TAKEASSET_ASSETCLASS, BUY_TAKEASSET_DATA], BUY_TAKEASSET_VALUE ], BUY_salt, BUY_start, BUY_end, dataType, buyOrderData ];
 
-  await exchange.connect(addr1).matchOrders(buyOrder, "0x", sellOrder, sellSignature, {value:"105"});
+  tx = await exchange.connect(addr1).matchOrders(buyOrder, "0x", sellOrder, sellSignature, {value:"1050"});
+  receipt = await tx.wait(1);
+  console.log("_7. receipt hash =",receipt.transactionHash, ", status = ",receipt.status);
 })
 
 it("set movie details", async()=>{
 
-  await truffleAssert.reverts( 
-    collectionProxy.connect(addr1).setMovieProducer("324f","0x8218af9ea6b3f9fc6d3987ac9755bd96ef2534d3"),
-    "VM Exception while processing transaction: reverted with reason string 'Ownable: caller is not the owner'"
-  );
+  try{ 
+    await collectionProxy.connect(addr1).setMovieProducer("324f","0x8218af9ea6b3f9fc6d3987ac9755bd96ef2534d3");
+  }catch(e){
+    failCounter++;
+  }
 
-  await collectionProxy.setMovieProducer("324f","0x8218af9ea6b3f9fc6d3987ac9755bd96ef2534d3");
+  tx = await collectionProxy.setMovieProducer("324f","0x8218af9ea6b3f9fc6d3987ac9755bd96ef2534d3");
+  tx.wait(1);
 
   let name = await collectionProxy.connect(addr1).name();
+  // name.wait(1);
   assert.equal(name, movieCollectionName);
 })
 
@@ -630,57 +663,76 @@ it("sets token uri", async()=>{
   let revealTokenUri = "abcd";
   producerSignature = await getProducerSignatureForTokenUri(producerUser, collectionProxyAddress, tokenId, revealTokenUri);
 
-  await truffleAssert.reverts(
-    collectionProxy.connect(hacker).updateTokenURI(tokenId, revealTokenUri, "0x"),
-    "VM Exception while processing transaction: reverted with reason string 'Ownable: caller is not the owner'"
-  )
+  try{
+    tx = await collectionProxy.connect(hacker).updateTokenURI(tokenId, revealTokenUri, "0x");
+    tx.wait(1);
+  }catch(e){
+    failCounter++;
+  }
 
   /* Producer also cant set */
-  await truffleAssert.reverts(
-    collectionProxy.connect(producerUser).updateTokenURI(tokenId, revealTokenUri, producerSignature),
-    "VM Exception while processing transaction: reverted with reason string 'Ownable: caller is not the owner'"
-  )
+  try{
+    tx = await collectionProxy.connect(producerUser).updateTokenURI(tokenId, revealTokenUri, producerSignature);
+    tx.wait(1);
+  }catch(e){
+    failCounter++;
+  }
 
   let ownerSignature = await getProducerSignatureForTokenUri(owner, collectionProxyAddress, tokenId, revealTokenUri);
 
   /* Owner must have producer signature */
-  await truffleAssert.reverts(
-    collectionProxy.updateTokenURI(tokenId, revealTokenUri, ownerSignature),
-    "VM Exception while processing transaction: reverted with reason string 'Invalid signature'"
-  )
+  try{
+    tx = await collectionProxy.updateTokenURI(tokenId, revealTokenUri, ownerSignature);
+    tx.wait(1);
+  }catch(e){
+    failCounter++;
+  }
 
   /* Invalid signature length */
-  await truffleAssert.reverts(
-    collectionProxy.updateTokenURI(tokenId, revealTokenUri, "0x"),
-    "VM Exception while processing transaction: reverted with reason string 'ECDSA: invalid signature length'"
-  )
+  try{
+    tx = await collectionProxy.updateTokenURI(tokenId, revealTokenUri, "0x");
+    tx.wait(1);
+  }catch(e){
+  failCounter++;
+  }
 
-  await collectionProxy.updateTokenURI(tokenId, revealTokenUri, producerSignature);
+  tx = await collectionProxy.updateTokenURI(tokenId, revealTokenUri, producerSignature);
+  tx.wait(1);
 
 })
 
 it("sets movie producer", async()=>{
-  await truffleAssert.reverts(
-    collectionProxy.connect(hacker).setMovieProducer(tokenId,hacker.address),
-    "VM Exception while processing transaction: reverted with reason string 'Ownable: caller is not the owner'"
-  )
+  try{
+    tx = await collectionProxy.connect(hacker).setMovieProducer(tokenId,hacker.address);
+    tx.wait(1);
+  }catch(e){
+    failCounter++;
+  }
 
-  await truffleAssert.reverts(
-    collectionProxy.setMovieProducer(tokenId,"0x0000000000000000000000000000000000000000"),
-    "VM Exception while processing transaction: reverted with reason string 'Producer can't be zero address'"
-  )
+  try{
+    tx = await collectionProxy.setMovieProducer(tokenId,"0x0000000000000000000000000000000000000000");
+    tx.wait(1);
+  }catch(e){
+    failCounter++;
+  }
 
-  await collectionProxy.setMovieProducer(tokenId,addr1.address);
+  tx = await collectionProxy.setMovieProducer(tokenId,addr1.address);
+  tx.wait(1);
 
 })
 
 it("sets Movie Reveal Time", async()=>{
-  await truffleAssert.reverts(
-    collectionProxy.connect(hacker).setMovieRevealTime(tokenId,"12345"),
-    "VM Exception while processing transaction: reverted with reason string 'Ownable: caller is not the owner'"
-  )
+  try{
+    tx = await collectionProxy.connect(hacker).setMovieRevealTime(tokenId,"12345");
+    tx.wait(1);
+  }catch(e){
+    failCounter++;
+  }
 
-  await collectionProxy.setMovieRevealTime(tokenId,"6789");
+  tx = await collectionProxy.setMovieRevealTime(tokenId,"6789");
+  tx.wait(1);
+
+  assert.equal(failCounter,16);
 })
 
 

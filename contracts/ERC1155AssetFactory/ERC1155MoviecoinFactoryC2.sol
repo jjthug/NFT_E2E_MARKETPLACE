@@ -34,7 +34,7 @@ contract ERC1155MoviecoinFactoryC2 is Ownable{
         token.transferOwnership(_msgSender());
         emit Create1155MoviecoinProxy(beaconProxy);
     }
-    
+
     function createToken(string memory _name, string memory _symbol, string memory baseURI, string memory contractURI, address[] memory operators, uint salt) external {
         address beaconProxy = deployProxy(getData(_name, _symbol, baseURI, contractURI, operators), salt);
 

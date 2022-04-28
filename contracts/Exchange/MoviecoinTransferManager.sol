@@ -196,7 +196,6 @@ abstract contract MoviecoinTransferManager is OwnableUpgradeable, ITransferManag
             transfer(LibAsset.Asset(matchCalculate, restValue), from, lastPayout.account, transferDirection, PAYOUT);
         }
     }
-
     function calculateTotalAmount(
         uint amount,
         uint feeOnTopBp,

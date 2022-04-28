@@ -1,9 +1,10 @@
 const dotenv = require("dotenv");
 dotenv.config({path: __dirname + '/.env'});
-const { PK_JFD, PKJJ, PK_ZZZ, URL_RINKEBY, URL_MUMBAI, API_KEY_RINKEBY, API_KEY_MUMBAI } = process.env;
+const { PK_JFD, PKJJ, PK_ZZZ, PK_ORIGIN, PK_VINOD, URL_RINKEBY, URL_MUMBAI, API_KEY_RINKEBY, API_KEY_MUMBAI } = process.env;
 require("@nomiclabs/hardhat-waffle");
 require("@openzeppelin/hardhat-upgrades");
 require("@nomiclabs/hardhat-etherscan");
+require('solidity-coverage');
 
 module.exports = {
 
@@ -16,6 +17,13 @@ module.exports = {
     }
   }
 },
+paths:{
+  // tests:"./test_mumbai"
+  // tests:"./test_rinkeby"
+},
+mocha:{
+  timeout:300000
+},
 networks: {
   hardhat: {
     // gasPrice : 500 * 1000000000
@@ -23,12 +31,20 @@ networks: {
   rinkeby:{
     // gasPrice : secret.gasPrice * 1000000000,
     url: URL_RINKEBY,
-    accounts: [PKJJ]
+    accounts: [PKJJ,PK_VINOD]
   },
   mumbai:{
     // gasPrice : secret.gasPrice * 1000000000,
     url: URL_MUMBAI,
-    accounts: [PK_JFD]
+    accounts: [PK_JFD,PK_VINOD],
+  },
+  rinkebyTest:{
+    url: URL_RINKEBY,
+    accounts: [PKJJ,PK_VINOD,PK_ZZZ,PK_ORIGIN,PK_JFD],
+  },
+  mumbaiTest:{
+    url: URL_MUMBAI,
+    accounts: [PK_JFD,PK_VINOD,PK_ZZZ,PK_ORIGIN,PKJJ],
   }
 },
 etherscan: {

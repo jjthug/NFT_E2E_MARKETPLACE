@@ -1,8 +1,19 @@
-npx hardhat run --network rinkeby scripts/deploy.js
+npx hardhat run --network rinkeby scripts/deployAll_for_tests.js
 npx hardhat run --network mumbai scripts/deploy.js
+
+npx hardhat run --network mumbai scripts/updateERC1155.js
+
 npx hardhat run --network mumbai scripts/beaconProxy.js
 npx hardhat run --network hardhat scripts/deploy.js
 npx hardhat run --network mumbai scripts/test.js
+
+npx hardhat run --network mumbai scripts/token.js
+npx hardhat run --network mumbai scripts/exchange.js
+
+npx hardhat run --network mumbai scripts/createCollection.js
+
+
+
 
 
 npx hardhat verify --contract contracts/BEACON/ERC1155RaribleBeacon.sol:ERC1155RaribleBeacon --network rinkeby 0x177283e35007Efb7a0F069E506882d3d2491df85 --constructor-args arguments.js 
@@ -13,12 +24,12 @@ npx hardhat verify --contract contracts/TEST_ERC20/Token.sol:Token --network mum
 
 /* ERC1155 Asset */
 npx hardhat verify --network rinkeby 0x89e6A74D0BF5e45059b514f12c59873e7626C292
-npx hardhat verify --network mumbai 0x23d36343fa9Bcd60FC313FEB358865BEe7EB70fB
+npx hardhat verify --network mumbai 0x656e569034e92E7413690c50F4eEf5bBD024F92e --contract contracts/ERC1155_ASSET/ERC1155Moviecoin.sol:ERC1155Moviecoin
 
 
 /* Beacon */
 npx hardhat verify --network rinkeby 0xb35848fFdF52e69dF9CE5c3e4eD141Aae6d08C25 --constructor-args arguments.js 
-npx hardhat verify --contract contracts/BEACON/ERC1155MVCBeacon.sol:ERC1155MoviecoinBeacon --network mumbai 0x970b713F7346C2ada9Ae596dE591F8D30F0acDEd --constructor-args arguments.js 
+npx hardhat verify --contract contracts/BEACON/ERC1155MVCBeacon.sol:ERC1155MoviecoinBeacon --network mumbai 0x6e2566fF7E9d511C99EFAc9F9C9711eF7E87E71d --constructor-args arguments.js 
 
 
 /* Lazy Transfer Proxy , NFT TransferProxy, ERC20 TransferProxy */
@@ -35,14 +46,27 @@ npx hardhat verify --network mumbai 0x443d436203e18ef16eE1Cecf7e49182e68ad4F5e
 
 
 /* Exchange */
-npx hardhat verify --network rinkeby 0x8569EbA099AF76191727CecE25811C979236030e
+npx hardhat verify --network rinkeby 0x304BD8d6C8451Bcd0be56970ed4aC7f6343D2bd6
 npx hardhat verify --network mumbai 0x05eF14A1F4cB5AabcB8055a8ef393e2C1cE83F91
 
 **** beacon proxy ****
 npx hardhat verify --contract contracts/TestAssetFactory/BeaconProxy.sol:BeaconProxy --network rinkeby 0x56fed895329109cdc09909764ea782e25b9fc60c --constructor-args arguments.js 
-npx hardhat verify --show-stack-traces --contract contracts/ERC1155AssetFactory/BeaconProxy.sol:BeaconProxy --network mumbai 0x65fd28BB09215E6219c82f4E4d9faF2CA6024426 --constructor-args arguments.js 
+npx hardhat verify --show-stack-traces --contract contracts/ERC1155AssetFactory/BeaconProxy.sol:BeaconProxy --network mumbai 0x6e2566fF7E9d511C99EFAc9F9C9711eF7E87E71d --constructor-args arguments.js 
 
 npx hardhat verify --show-stack-traces --network mumbai 0x65fd28BB09215E6219c82f4E4d9faF2CA6024426 --constructor-args arguments.js 
 
 
 0x3442e8bc00000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000140000000000000000000000000000000000000000000000000000000000000016000000000000000000000000012ab59b03b18df0a200323419d13a341b878c52500000000000000000000000060af776251c277717d4e1ebdb7c48a1cae4f0a18000000000000000000000000000000000000000000000000000000000000000e4d564320636f6c6c656374696f6e00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000034d5643000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+
+
+---------rinkeby contracts---------
+asset Deployed to :  0xd58401A0751901c0cA7CE32262FC3DE72507BE1A
+beacon Deployed to :  0x4DfFdb3afDA716e9EA775D16C16B46d07976c40c
+lazyTransferProxy Deployed to :  0x84d2Ea192E7d6693AE636ee26B803c024c494Aee
+nftTransferProxy Deployed to :  0x22c90de2669278887acCc0A9a76Fa11F95cc28f7
+factory Deployed to :  0xE8ea4B22780A605Da8B4A53918F93A61DCBBb027
+Collection proxy deployed to =  0x2b5582F246322069bC7F2C83935eFcec5a8965Db
+erc20TransferProxy Deployed to :  0x3b5ee6a275f5bcA611cb0354192217b60b970988
+royaltiesRegistry Deployed to :  0xfAd7899649532795Ba7c6b2238713edB0E42c5d7
+exchange Deployed to :  0x275F39709d5aD194eeDD68047dE1b6E529d08C92
+token Deployed to :  0x7FACBe3571a528528b5cf4F447896c1764b18E1d

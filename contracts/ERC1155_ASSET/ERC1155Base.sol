@@ -81,25 +81,27 @@ abstract contract ERC1155Base is OwnableUpgradeable, ERC1155DefaultApproval, ERC
     }
 
     function updateTokenURI(uint256 tokenId, string memory newTokenURI, bytes memory producerSignature) external onlyOwner{
-        string memory movieId = tokenIdToMovieId[tokenId];
-        require(block.timestamp >= nftRevealTime[movieId], "NFT Reveal time has not reached yet");
-        address producer = movieIdToProducer[movieId];
+        string memory _movieId = movieId[tokenId];
+        require(block.timestamp >= nftRevealTime[_movieId], "NFT Reveal time has not reached yet");
+        address producer = movieProducer[_movieId];
 
-        // signature verification
-        validateProducerTokenUriSignature(tokenId, movieId, producer, newTokenURI, producerSignature);
+        // producer signature verification
+        validateProducerTokenUriSignature(tokenId, newTokenURI, producer, producerSignature);
 
         _tokenURIs[tokenId] = newTokenURI;
     }
 
-    //tokenid, tokenuri, movieid, producer
-
-    function _setMovieProducer(string memory _movieId, address _producer) external onlyOwner {
+    function setMovieProducer(string memory _movieId, address _producer) external onlyOwner {
         require(_producer != address(0), "Producer can't be zero address");
-        movieIdToProducer[_movieId] = _producer;
+        movieProducer[_movieId] = _producer;
     }
 
-    function _setMovieIdRevealTime(string memory movieId, uint256 _revealTime) external onlyOwner {
+    function setMovieRevealTime(string memory movieId, uint256 _revealTime) external onlyOwner {
         nftRevealTime[movieId] = _revealTime;
+    }
+
+    function sayHello() external pure returns(string memory){
+        return "hello";
     }
 
     uint256[50] private __gap;

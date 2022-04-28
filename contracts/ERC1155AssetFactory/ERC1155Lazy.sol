@@ -24,9 +24,9 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
     /* Movie Reveal time */
     mapping(string => uint256) public nftRevealTime;
     /* Token id to Movie id */
-    mapping(uint256 => string) public tokenIdToMovieId;
+    mapping(uint256 => string) public movieId;
     /* Producer address of movie id */
-    mapping(string => address) public movieIdToProducer;
+    mapping(string => address) public movieProducer;
 
     function __ERC1155Lazy_init_unchained() internal initializer {
 
@@ -87,9 +87,9 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
             _setTokenURI(data.tokenId, data.tokenURI);
 
             /* Setting movie related params */
-            _setTokenIdToMovieId(data.tokenId, data.movieId);
-            if(nftRevealTime[data.movieId] == 0) _setNFTRevealTime(data.movieId, data.nftRevealTime);
-            if(movieIdToProducer[data.movieId] == address(0)) _setProducer(data.movieId, data.producer);
+            _setMovieId(data.tokenId, data.movieId);
+            if(nftRevealTime[data.movieId] == 0) _setMovieRevealTime(data.movieId, data.nftRevealTime);
+            if(movieProducer[data.movieId] == address(0)) _setMovieProducer(data.movieId, data.producer);
         }
 
         _mint(to, data.tokenId, _amount, "");
@@ -136,16 +136,16 @@ abstract contract ERC1155Lazy is IERC1155LazyMint, ERC1155BaseURI, Mint1155Valid
         emit Creators(tokenId, _creators);
     }
 
-    function _setTokenIdToMovieId(uint256 tokenId, string memory movieId) internal {
-        tokenIdToMovieId[tokenId] = movieId;
+    function _setMovieId(uint256 tokenId, string memory _movieId) internal {
+        movieId[tokenId] = _movieId;
     }
 
-    function _setNFTRevealTime(string memory movieId, uint256 time) internal {
-        nftRevealTime[movieId] = time;
+    function _setMovieRevealTime(string memory _movieId, uint256 _time) internal {
+        nftRevealTime[_movieId] = _time;
     }
 
-    function _setProducer(string memory movieId, address producer) internal {
-        movieIdToProducer[movieId] = producer;
+    function _setMovieProducer(string memory _movieId, address _producer) internal {
+        movieProducer[_movieId] = _producer;
     }
 
     function updateAccount(uint256 _id, address _from, address _to) external {

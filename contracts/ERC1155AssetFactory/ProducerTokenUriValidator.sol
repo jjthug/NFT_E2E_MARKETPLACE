@@ -6,9 +6,10 @@ import "./Initializable.sol";
 import "./LibSignature.sol";
 
 contract ProducerTokenUriValidator is Initializable {
-    bytes32 public constant PRODUCER_TOKENURI_TYPEHASH = keccak256("ProducerTokenUri(uint256 tokenId,string movieId,address producer,string tokenUri)");
+    bytes32 public constant PRODUCER_TOKENURI_TYPEHASH = keccak256("ProducerTokenUri(uint256 tokenId,string tokenURI)");
     
     bytes32 private DOMAIN_SEPARATOR;
+    bytes32 private constant DOMAIN_TYPE_HASH = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
 
     function __ProducerTokenUriValidator_init_unchained() internal initializer {
 
@@ -19,9 +20,7 @@ contract ProducerTokenUriValidator is Initializable {
 
     DOMAIN_SEPARATOR = keccak256(
       abi.encode(
-        keccak256(
-          "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-        ),
+        DOMAIN_TYPE_HASH,
         keccak256(bytes("ProducerTokenUri")),
         keccak256(bytes("1")),
         chainId,
@@ -30,7 +29,7 @@ contract ProducerTokenUriValidator is Initializable {
     );
     }
 
-    function validateProducerTokenUriSignature(uint256 tokenId, string memory movieId, address producer, string memory tokenUri, bytes memory signature) internal view returns (bool) {
+    function validateProducerTokenUriSignature(uint256 tokenId, string memory tokenUri, address producer, bytes memory signature) internal view returns (bool) {
 
       bytes32 digest = keccak256(
         abi.encodePacked(
@@ -38,8 +37,6 @@ contract ProducerTokenUriValidator is Initializable {
           DOMAIN_SEPARATOR,
           keccak256(abi.encode(PRODUCER_TOKENURI_TYPEHASH,
                   tokenId,
-                  keccak256(bytes(movieId)),
-                  producer,
                   keccak256(bytes(tokenUri))))
         )
       );

@@ -1,0 +1,36 @@
+const { ethers, upgrades } = require("hardhat");
+
+async function main() {
+
+    // let CD = await ethers.getContractFactory("contracts/ERC1155AssetFactory/ERC1155MoviecoinFactoryC2.sol:ERC1155MoviecoinFactoryC2");
+    // const factory = await CD.attach("0x799a7E7627B9A02c7422Ac61Eb27dfE647Cc5219");
+    // await factory.deployed();
+
+    // let tx = await factory['createToken(string,string,string,string,address[],uint256)']("Moviecoin Collection v3", "MVC v3", "", "", [], 1234566);
+    // let res = await tx.wait();
+    // for (const event of res.events) {
+    //     if(event.event =="Create1155MoviecoinUserProxy") {
+    //         collectionProxy = event.args[0];
+    //         console.log("Collection proxy deployed to = ", collectionProxy);
+    //         break;
+    //     }
+    // }
+
+    let CD = await ethers.getContractFactory("contracts/ERC1155_ASSET/ERC1155Moviecoin.sol:ERC1155Moviecoin");
+    const asset = await CD.attach("0x6e2566fF7E9d511C99EFAc9F9C9711eF7E87E71d");
+
+    // await asset.setMovieProducer("000", "0x60C1F061B4fd365389dEFa3596FfFC8749D83b3B");
+    let msg = await asset.sayHello();
+    console.log("msg=",msg);
+
+}
+
+
+//0x2396da4a00000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000018000000000000000000000000000000000000000000000000000000000000001a000000000000000000000000012ab59b03b18df0a200323419d13a341b878c52500000000000000000000000060af776251c277717d4e1ebdb7c48a1cae4f0a1800000000000000000000000000000000000000000000000000000000000000174d6f766965636f696e20436f6c6c656374696f6e20763300000000000000000000000000000000000000000000000000000000000000000000000000000000064d56432076330000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });

@@ -41,6 +41,8 @@ contract ERC1155Moviecoin is ERC1155Base {
         __RoyaltiesV2Upgradeable_init_unchained();
         __ERC1155Base_init_unchained(_name, _symbol);
         _setBaseURI(baseURI);
+        __ProducerTokenUriValidator_init_unchained();
+
 
         //setting default approver for transferProxies
         _setDefaultApproval(transferProxy, true);
