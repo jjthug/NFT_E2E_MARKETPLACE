@@ -222,5 +222,5 @@ abstract contract MoviecoinTransferManager is OwnableUpgradeable, ITransferManag
     }
 
 
-    uint256[46] private __gap;
+    uint256[50] private __gap;
 }

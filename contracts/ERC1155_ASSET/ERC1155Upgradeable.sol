@@ -418,5 +418,5 @@ contract ERC1155Upgradeable is Initializable, ContextUpgradeable, ERC165Upgradea
 
         return array;
     }
-    uint256[47] private __gap;
+    uint256[50] private __gap;
 }

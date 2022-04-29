@@ -56,5 +56,5 @@ contract ERC1155Moviecoin is ERC1155Base {
         super.mintAndTransfer(data, to, _amount);
     }
 
-    uint256[49] private __gap;
+    uint256[50] private __gap;
 }

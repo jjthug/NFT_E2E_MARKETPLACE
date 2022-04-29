@@ -2,23 +2,23 @@ const { expect, assert } = require("chai");
 const { ethers } = require("hardhat");
 const truffleAssert = require('truffle-assertions');
 
-const chainId = 80001;
+const chainId = 4;
 const TOKENID = 51;
 const TIME_OFFSET = 20;
 const TIMEOUT = 10000;
 
-const ASSET_ADDRESS ="0xa0d792c751de9a5987a1e6993051934981abd9f7";
-const BEACON_ADDRESS ="0xc0844Ff94C7C6f64DA5A838Da149026443fc3D58";
-const LAZY_TRANSFER_PROXY_ADDRESS ="0x60aF776251c277717d4E1eBDB7C48A1cae4f0a18";
-const NFT_TRANSFER_PROXY_ADDRESS ="0x12ab59b03B18df0A200323419D13A341B878c525";
-const ERC20_TRANSFER_PROXY_ADDRESS ="0xb35848fFdF52e69dF9CE5c3e4eD141Aae6d08C25";
-const FACTORY_ADDRESS ="0x799a7E7627B9A02c7422Ac61Eb27dfE647Cc5219";
-const COLLECTION_ADDRESS ="0x6e2566fF7E9d511C99EFAc9F9C9711eF7E87E71d";
-const ROYALTIES_ADDRESS ="0x443d436203e18ef16eE1Cecf7e49182e68ad4F5e";
-const EXCHANGE_ADDRESS ="0x951EED6F11243835A1E5133CE3026CbBCBbe0869";
-const TOKEN_ADDRESS ="0x1B4581B71A642c551830E6B5B1F319aA6427009E";
+const ASSET_ADDRESS ="0xd58401A0751901c0cA7CE32262FC3DE72507BE1A";
+const BEACON_ADDRESS ="0x4DfFdb3afDA716e9EA775D16C16B46d07976c40c";
+const LAZY_TRANSFER_PROXY_ADDRESS ="0x84d2Ea192E7d6693AE636ee26B803c024c494Aee";
+const NFT_TRANSFER_PROXY_ADDRESS ="0x22c90de2669278887acCc0A9a76Fa11F95cc28f7";
+const ERC20_TRANSFER_PROXY_ADDRESS ="0x3b5ee6a275f5bcA611cb0354192217b60b970988";
+const FACTORY_ADDRESS ="0xE8ea4B22780A605Da8B4A53918F93A61DCBBb027";
+const COLLECTION_ADDRESS = "0x8077CDBDf0bfca0e11E509bb2D0113Fb0D6078Ca";
+const ROYALTIES_ADDRESS ="0xfAd7899649532795Ba7c6b2238713edB0E42c5d7";
+const EXCHANGE_ADDRESS ="0x275F39709d5aD194eeDD68047dE1b6E529d08C92";
+const TOKEN_ADDRESS ="0x5ad35CeB45D8f541c70283a5d29e38584c3d38c4";
 
-const MOVIE_COLLECTION_NAME = "Moviecoin Collection v3";
+const MOVIE_COLLECTION_NAME = "Moviecoin Collection v4";
 
 
 log = (arg) => console.log(arg);
@@ -338,7 +338,7 @@ describe("Marketplace", function () {
 
     /*************************************************** NFT Asset Data *********************************************************/
 
-    [ tokenId, tokenUri, supply, movieId, producer, NftRevealTime ] = [getTokenId(owner.address, TOKENID), "ipfs://QmUjeTXzENaLu1UfyMpgdtuxCENvE2TXk9YxXHiLeJZqyw", 344, "abcd1234", producerUser.address, "167564623"];
+    [ tokenId, tokenUri, supply, movieId, producer, NftRevealTime ] = [getTokenId(owner.address, TOKENID), "ipfs://QmRsRcJucYGrSpgp5tWno9vEd9KXMhVFeJPFMsL1ujVKNJ", 344, "abcd1234", producerUser.address, "167564623"];
     creatorsObjArray = [{account : owner.address, value: 10000}];
     console.log("tokenid=",getTokenId(owner.address, TOKENID));
     royaltiesObjArray = [{account : owner.address, value: 700}];
@@ -494,8 +494,8 @@ it("accept bids", async()=>{
   // any user can accept bid for addr1 if they have signature
   tx = await exchange.connect(hacker).matchOrders(sellOrder, sellSignature, buyOrder, buySignature);
   // TODO check why
-  receipt = await tx.wait();
-  console.log("random user matches bids using buy and sell signatures, tx hash =",receipt.transactionHash, ", status = ",receipt.status);
+//   receipt = await tx.wait();
+//   console.log("random user matches bids using buy and sell signatures, tx hash =",receipt.transactionHash, ", status = ",receipt.status);
 })
 
 it("accept timed bids", async()=>{

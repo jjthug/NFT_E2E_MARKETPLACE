@@ -56,5 +56,5 @@ abstract contract ERC165Upgradeable is Initializable, IERC165Upgradeable {
         require(interfaceId != 0xffffffff, "ERC165: invalid interface id");
         _supportedInterfaces[interfaceId] = true;
     }
-    uint256[49] private __gap;
+    uint256[50] private __gap;
 }

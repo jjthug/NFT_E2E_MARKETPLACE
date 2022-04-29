@@ -71,5 +71,5 @@ abstract contract OwnableUpgradeable is Initializable, ContextUpgradeable {
         emit OwnershipTransferred(_owner, newOwner);
         _owner = newOwner;
     }
-    uint256[49] private __gap;
+    uint256[50] private __gap;
 }

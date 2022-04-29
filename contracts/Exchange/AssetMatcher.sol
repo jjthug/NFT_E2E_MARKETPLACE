@@ -74,5 +74,5 @@ abstract contract AssetMatcher is Initializable, OwnableUpgradeable {
         return LibAsset.AssetType(0, EMPTY);
     }
 
-    uint256[49] private __gap;
+    uint256[50] private __gap;
 }

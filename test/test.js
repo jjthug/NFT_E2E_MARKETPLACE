@@ -202,6 +202,13 @@ const getProducerSignatureForTokenUri = async(producer, _verifyingContractAddres
   
 }
 
+// const getAdminProxyAddress = async(proxyAddress) =>{
+//   let provider = new ethers.providers.JsonRpcProvider();
+//   // ADMIN_SLOT = "0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103" => (bytes32(uint256(keccak256("eip1967.proxy.admin")) - 1))
+//   let adminProxyAdd = await provider.getStorageAt(proxyAddress, "0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103");
+//   return adminProxyAdd;
+// }
+
 describe("Marketplace", function () {
   
     let asset, beacon, lazyTransferProxy, nftTransferProxy, factory, collectionProxy, erc20TransferProxy, royaltiesRegistry, exchange, token;
@@ -295,6 +302,8 @@ describe("Marketplace", function () {
     exchange = await upgrades.deployProxy(CD, [nftTransferProxy.address,lazyTransferProxy.address,erc20TransferProxy.address,0,"0x23F7F82Eb917A49a722E970580Ee138Af5f71D74",royaltiesRegistry.address], {initializer:"__ExchangeV2_init"});
     await exchange.deployed();
     console.log("exchange Deployed to : ", exchange.address);
+    // let adminProxy = await getAdminProxyAddress(exchange);
+    // console.log("adminProxy of exchange =",adminProxy);
 
     CD = await ethers.getContractFactory("contracts/TEST_ERC20/Token.sol:Token");
     token = await CD.deploy("US Dollar Coin", "USDC", "10000000000000000000000000");
