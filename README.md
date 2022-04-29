@@ -79,7 +79,7 @@ To upgrade Royalties Registry contract
     npx hardhat run --network mumbai scripts/UPGRADES/upgradeRoyaltiesRegistry.js
 ```
 
-### CREATE NEW PRIVATE COLLECTION
+### CREATE NEW NFT COLLECTION
 
 To create a new private collection (only owner can create NFTs in the private collection)
 ```
