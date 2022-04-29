@@ -37,7 +37,7 @@ npm i
     - At the end of auction, the highest bid will be shown to seller, who can then choose to accept it or not.
 
 
-## |********************************* SCRIPTS **************************************|
+## SCRIPTS
 
 ###  DEPLOY MARKETPLACE
 
