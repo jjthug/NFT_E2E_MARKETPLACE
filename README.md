@@ -1,13 +1,13 @@
 # Project NFT Marketplace
 
-## Install dependencies
+## |Install dependencies|
 
 Run command:
 ```
 npm i
 ```
 
-## Contracts
+## |Contracts|
 1.	ERC1155 Asset: This is the contract that represents the NFT collection.
 2.	Beacon: It contains the implementation address of the ERC1155 asset.
 3.	Lazy NFT transfer proxy: The exchange calls this proxy to transfers the Lazy minted NFTs on behalf of seller (asset class = ERC1155_LAZY).
@@ -17,12 +17,12 @@ npm i
 7.	Royalties Registry: It will be used by exchange to get the royalties details for each collection.
 8.	Exchange: Allows platform to let users trade NFTs (ERC721, ERC1155), ERC20 tokens, ETH. 
 
-## The Process
+## |The Process|
 1.	Seller lists NFTs for sale
 2.	Buyer approves platform (erc20 transfer proxy) to transfer their funds (if applicable).
 3.	If approved buyer can buy NFTs on the platform.
 
-## Order Matching
+## |Order Matching|
 
 - Direct buy
     - Seller must create sell order and sell Signature
@@ -37,7 +37,7 @@ npm i
     - At the end of auction, the highest bid will be shown to seller, who can then choose to accept it or not.
 
 
-## SCRIPTS
+## |SCRIPTS|
 
 ###  DEPLOY MARKETPLACE
 
@@ -90,4 +90,19 @@ To create new private collection (only owner can create NFTs in the private coll
 
 ```   
     npx hardhat run --network mumbai scripts/TOKEN/token.js
+```
+
+## |TESTS|
+
+Test cases in the test folder can be run with the following command: 
+```
+npx hardhat test
+```
+### Testnet Tests
+Create the .env files with the required account private keys and node URLs.
+Also update the test path in hardhat.config.
+Tests can be run on Polygon Mumbai or Rinkeby testnets using the command:
+
+```
+npx hardhat test --network [NETWORK_NAME from hardhat.config]
 ```
