@@ -1,11 +1,8 @@
 const { ethers, upgrades } = require("hardhat");
 const fs = require('fs');
-const {URL_MUMBAI} = process.env;
 let admin_proxy_abi = require('./ADMIN_PROXY_ABI/proxy_abi.json');
 
 async function main() {
-
-  let provider = new ethers.providers.JsonRpcProvider(URL_MUMBAI);
 
 /******************************************************************************/
   

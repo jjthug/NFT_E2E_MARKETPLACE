@@ -56,6 +56,7 @@ async function main() {
     await exchange.deployed();
     console.log("exchange Deployed to : ", exchange.address);
 
+    /* OPTIONAL: required to deploy ERC20 token for testing on testnets if not already deployed */
     // CD = await ethers.getContractFactory("contracts/TEST_ERC20/Token.sol:Token");
     // token = await CD.deploy("US Dollar Coin", "USDC", "10000000000000000000000000");
     // await token.deployed();

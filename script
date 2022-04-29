@@ -15,7 +15,10 @@
 
 
     /* CREATE NEW PRIVATE COLLECTION */
-    npx hardhat run --network mumbai scripts/CREATE_COLLECTION/createCollection.js
+    npx hardhat run --network mumbai scripts/CREATE_COLLECTION/createPrivateCollection.js
+
+    /* CREATE NEW OPEN COLLECTION */
+    npx hardhat run --network mumbai scripts/CREATE_COLLECTION/createOpenCollection.js
 
 
     /* USDT ERC20 TOKEN */

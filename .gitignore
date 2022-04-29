@@ -4,9 +4,11 @@ coverage
 coverage.json
 typechain
 .openzeppelin
+
 test contracts
 
 #Hardhat files
 cache
 artifacts
 secrets.json
+.vscode
